@@ -1,0 +1,30 @@
+[
+  {
+    "id": "renzoverse",
+    "depends_on": []
+  },
+  {
+    "id": "cavesharp-os",
+    "depends_on": ["renzoverse"]
+  },
+  {
+    "id": "big-animal",
+    "depends_on": ["renzoverse"]
+  },
+  {
+    "id": "ww3-college",
+    "depends_on": ["renzoverse"]
+  },
+  {
+    "id": "renzo-hacker-lab",
+    "depends_on": ["renzoverse"]
+  },
+  {
+    "id": "agentdash",
+    "depends_on": ["renzo-hacker-lab"]
+  },
+  {
+    "id": "renzo-academy",
+    "depends_on": ["renzoverse"]
+  }
+]
