@@ -1,8 +1,6 @@
-import os
 import json
 from pathlib import Path
 
-# Explicit folder mapping for each pillar to ensure 100% accurate workspace detection
 PILLAR_TO_FOLDER = {
     "renzoverse": "Renzoverse",
     "cavesharp-os": "CaveSharp-OS",
@@ -13,59 +11,56 @@ PILLAR_TO_FOLDER = {
     "renzo-academy": "Renzo-Academy",
 }
 
+
 def get_workspace_path():
-    return Path(os.environ.get("RENZO_WORKSPACE", r"D:\Projects"))
+    return Path("/workspaces")
+
 
 def load_pillars():
-    config_path = Path(__file__).parent / "pillars.json"
-    if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+    config_file = Path(__file__).parent / "pillars.json"
 
-def build_report(workspace_override=None):
-    ws = workspace_override or get_workspace_path()
+    with open(config_file, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def build_report():
+    workspace = get_workspace_path()
     pillars = load_pillars()
-    report_pillars = []
-    
-    for p in pillars:
-        pid = p["id"]
-        folder_name = PILLAR_TO_FOLDER.get(pid, pid)
-        target_path = ws / folder_name
-        
-        exists = target_path.exists() and target_path.is_dir()
-        
-        report_pillars.append({
-            "id": pid,
-            "folder": folder_name,
-            "status": "ok" if exists else "missing",
-            "depends_on": p.get("depends_on", [])
-        })
-        
-    return {"workspace": str(ws), "pillars": report_pillars}
+
+    report = []
+
+    for pillar in pillars:
+        pillar_id = pillar["id"]
+
+        folder = PILLAR_TO_FOLDER.get(
+            pillar_id,
+            pillar_id
+        )
+
+        exists = (workspace / folder).exists()
+
+        report.append(
+            {
+                "id": pillar_id,
+                "folder": folder,
+                "status": "ok" if exists else "missing",
+                "depends_on": pillar.get("depends_on", [])
+            }
+        )
+
+    return {
+        "workspace": str(workspace),
+        "pillars": report
+    }
+
 
 def mermaid(pillars):
     lines = ["graph TD"]
-    for p in pillars:
-        for dep in p.get("depends_on", []):
-            lines.append(f"    {dep} --> {p['id']}")
+
+    for pillar in pillars:
+        for dep in pillar.get("depends_on", []):
+            lines.append(
+                f"    {dep} --> {pillar['id']}"
+            )
+
     return "\n".join(lines)
-
-def start_order(pillars):
-    visited = set()
-    temp = set()
-    
-    def visit(p_id, deps_map):
-        if p_id in temp:
-            raise ValueError(f"Circular dependency detected involving {p_id}")
-        if p_id not in visited:
-            temp.add(p_id)
-            for d in deps_map.get(p_id, []):
-                visit(d, deps_map)
-            temp.remove(p_id)
-            visited.add(p_id)
-
-    deps_map = {p["id"]: p.get("depends_on", []) for p in pillars}
-    for p in pillars:
-        visit(p["id"], deps_map)
-    return True
