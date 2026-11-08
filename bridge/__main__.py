@@ -1,51 +1,27 @@
 import sys
-
-from bridge.core import build_report
-from bridge.core import mermaid
-
+from bridge.core import build_report, mermaid
+from bridge.server import serve
 
 def main():
-
-    cmd = (
-        sys.argv[1]
-        if len(sys.argv) > 1
-        else "status"
-    )
-
+    args = sys.argv[1:]
+    cmd = args[0] if args else "status"
+    
     if cmd == "status":
-
         report = build_report()
-
-        print(
-            f"Workspace: {report['workspace']}"
-        )
-
+        print(f"Workspace: {report['workspace']}")
         for pillar in report["pillars"]:
-
-            icon = (
-                "[OK]"
-                if pillar["status"] == "ok"
-                else "[N/A]"
-            )
-
-            print(
-                f"{icon} {pillar['id']}"
-            )
-
+            icon = "[OK]" if pillar["status"] == "ok" else "[N/A]"
+            print(f"{icon} {pillar['id']}")
+            
     elif cmd == "graph":
-
         report = build_report()
-
-        print(
-            mermaid(report["pillars"])
-        )
-
+        print(mermaid(report["pillars"]))
+        
+    elif cmd == "serve":
+        serve()
+        
     else:
-
-        print(
-            "Usage: python -m bridge [status|graph]"
-        )
-
+        print("Usage: python -m bridge [status|graph|serve]")
 
 if __name__ == "__main__":
     main()
